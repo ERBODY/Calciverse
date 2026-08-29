@@ -1,20 +1,37 @@
-<<<<<<< HEAD
-# universal_converter_calculator
+# Calciverse
 
-A new Flutter project.
+A multi-purpose converter and calculator app built with Flutter. Supports English and Arabic with full RTL layout.
+
+## Features
+
+- **Unit Converters** — Length, Weight, Area, Volume, Temperature, Time, Data
+- **Calculators** — Age, BMI, Calories, Percentage, Post-Tax, Duration
+- **Tools** — Currency Converter, File Converter, Zodiac Sign, Event Countdown, Age Difference
+- **Bilingual** — Full English & Arabic support with automatic RTL
+- **Dark / Light Theme** — Switch between themes from settings
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Configuration
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Copy `.env.example` to `.env` and add your API keys:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-=======
-# Universal-Converter-Calculator
->>>>>>> 9f6703af8b0162dcf95351223f678e1716c8a1dc
+```bash
+cp .env.example .env
+```
+
+## Tech Stack
+
+- Flutter / Dart
+- SharedPreferences for local settings
+- Flutter Dotenv for environment config
+- HTTP package for API calls
+
+## License
+
+This project is for personal use.
