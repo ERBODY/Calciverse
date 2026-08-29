@@ -1,0 +1,33 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    // Force a specific version of androidx.core to resolve conflicts
+    configurations.all {
+        resolutionStrategy {
+            force 'androidx.core:core:1.10.1'
+        }
+    }
+
+    // Add options to manage JNI packages for compatibility with certain Android SDK versions
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+            options.fork = true
+            options.forkOptions.executable = "C:\\Program Files\\Java\\jdk-17\\bin\\javac.exe"
+        }
+    }
+}
+
+rootProject.buildDir = "../build"
+
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
