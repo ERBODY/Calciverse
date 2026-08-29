@@ -26,7 +26,7 @@ Legend: **Deps** lists task IDs that must be completed first.
 - **Approach**: replace `_cloudConvertToken` const with `dotenv.env['CLOUDCONVERT_API_KEY']`; guard conversion start when null/empty.
 - **UI changes**: error card when unconfigured. **Logic**: key sourcing. **Localization**: new error string.
 - **Testing**: manual conversion with/without `.env`; widget test for unconfigured state.
-- **Acceptance**: no secret string in repo; converter works with `.env` key; graceful unconfigured state.
+- **Acceptance**: no secret string in current tracked files; converter works with `.env` key; graceful unconfigured state.
 - **Risks**: old key remains in git history — rotation is mandatory, history rewrite optional.
 
 ### P0-02 Fix translation parity & failing tests
