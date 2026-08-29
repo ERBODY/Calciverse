@@ -47,7 +47,8 @@ test/
 - **Pattern**: no state management library; plain `StatefulWidget` + `setState` everywhere.
 - **Business logic lives inside page widgets.** Conversion factors, calculation formulas, currency rates, and the entire CloudConvert HTTP workflow are defined directly in page state classes. There are no engines, services, repositories, or models layers.
 - **Navigation**: imperative `Navigator.push(MaterialPageRoute(...))` from a `switch` in `home_page.dart` (`_getPageForTitle`). No named routes, no deep links, no bottom navigation. Home is a flat 18-item grid (2 columns).
-- **Prop drilling**: `currentLanguage`, `toggleTheme`, `isLightTheme`, `changeLanguage` are passed as constructor params through every page. No `InheritedWidget`/provider; a language/theme change while a tool page is open does not rebuild that page.
+- **Prop drilling (language)**: `currentLanguage`, `toggleTheme`, `isLightTheme`, `changeLanguage` are passed as constructor params through every page. `currentLanguage` is captured at push time, so a **language** change while a tool page is open does not update that page until it is reopened.
+- **Theme propagation is NOT broken**: pages and unified widgets read `Theme.of(context)` (e.g. `Theme.of(context).brightness` in `unified_page_design.dart`), which is inherited from `MaterialApp` and rebuilds open routes when `themeMode` changes. The prop-drilled `isLightTheme` flag is only used to render the Settings switch. Verified by code inspection; runtime verification is part of P0-05 before any theme changes — no theme refactor is planned unless testing proves it necessary.
 - **Dead code**: `lib/widgets/unified_theme.dart` (522 lines) is never imported; `PlaceholderPage` in `home_page.dart` is unreachable in practice.
 
 ## 3. Existing Features / Pages
@@ -120,8 +121,9 @@ No history, favorites, presets, custom units, cached rates, or countdown persist
 
 ## 9. Security Risks
 
-1. **CRITICAL — Hardcoded CloudConvert API key**: a full production JWT API token (scopes incl. `task.write`, `user.write`, `webhook.write`) is committed as a string constant `_cloudConvertToken` in `lib/pages/file_converter_page.dart` (line ~36). It is in git history and ships inside every client build. The `.env` mechanism exists but is bypassed entirely.
-   - Required actions: **revoke/rotate this key immediately**; short-term, read from `.env` (still extractable from a client, per spec §53); long-term, move to a backend proxy (Flutter → proxy → CloudConvert).
+1. **CRITICAL — Hardcoded CloudConvert API key (active security incident)**: a full production JWT API token (scopes incl. `task.write`, `user.write`, `webhook.write`) is committed as a string constant `_cloudConvertToken` in `lib/pages/file_converter_page.dart` (line ~36). It is in git history and ships inside every client build. The `.env` mechanism exists but is bypassed entirely.
+   - Required actions: **revoke/rotate this key immediately** (owner action); the old credential must never be used again; remove it from tracked source with no fallback credential left in code; add repository secret scanning. Removing the secret from the latest commit does NOT remove it from git history — the historical exposure stands regardless, which is why revocation is mandatory.
+   - Configuration tiers must be kept distinct: **local development configuration** (`.env`, dev-only convenience — NOT a security boundary), **client-side configuration** (anything bundled in a Flutter client, especially Web, is extractable and must never contain production secrets), and **production secret management** (secrets live server-side behind a backend proxy: Flutter → proxy → CloudConvert). `.env` must not be presented as the production security solution.
 2. **Client-side secret architecture**: even with `.env`, any key bundled in a Flutter client (especially Web) is extractable. Spec §120 mandates a backend layer; none exists.
 3. **Client-side-only credit limit**: the 10/day quota lives in SharedPreferences and can be reset by clearing app data — it does not protect the CloudConvert account.
 4. **Raw exception text shown to users**: several `_showErrorDialog('...: $e')` calls leak exception details (file picking, generic conversion errors).
@@ -133,7 +135,7 @@ No history, favorites, presets, custom units, cached rates, or countdown persist
 2. **Event Countdown is not persisted** — events are lost on restart (spec expects persistent, multiple countdowns).
 3. **Conversion progress heuristic is broken**: `_conversionProgress = 0.5 + (_conversionProgress * 0.5)` compounds toward 1.0 regardless of actual job progress.
 4. **Credits are decremented only on success but not checked before conversion**: a user with 0 credits can still convert (the counter just stays at 0); the limit is display-only.
-5. **Language/theme changes don't propagate to already-open pages** (constructor prop drilling; page must be reopened).
+5. **Language changes don't propagate to already-open pages** (constructor prop drilling; page must be reopened). Theme changes DO propagate via `Theme.of(context)`.
 6. **Demo currency rates are not labeled** as demo/sample in the UI (spec §50 forbids presenting them as real).
 7. Home tool keys are inconsistent (`'Length'`, `'Area'` capitalized vs `snake_case` elsewhere), which makes the translation lookup fragile.
 8. `.env` missing at runtime only logs a debug warning; the File Converter silently uses the hardcoded key.
